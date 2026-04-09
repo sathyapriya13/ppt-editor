@@ -24,7 +24,7 @@ function Canvas({ slides, setSlides, currentSlide, setSelected }) {
       setSelected(e.selected[0]);
     });
 
-    // update position in JSON
+    // ✅ FIXED resize + move saving
     canvas.on("object:modified", (e) => {
       const obj = e.target;
 
@@ -37,6 +37,10 @@ function Canvas({ slides, setSlides, currentSlide, setSelected }) {
         if (el) {
           el.x = obj.left;
           el.y = obj.top;
+
+          // ✅ store scale properly
+          el.scaleX = obj.scaleX;
+          el.scaleY = obj.scaleY;
         }
 
         return updated;
@@ -62,11 +66,12 @@ function Canvas({ slides, setSlides, currentSlide, setSelected }) {
           top: el.y,
           fontSize: el.size || 20,
           fill: el.color || "#000",
-          fontWeight: el.bold ? "bold" : "normal"
+          fontWeight: el.bold ? "bold" : "normal",
+          scaleX: el.scaleX || 1,
+          scaleY: el.scaleY || 1
         });
 
         text.customId = el.id;
-
         canvas.add(text);
       }
 
@@ -75,8 +80,8 @@ function Canvas({ slides, setSlides, currentSlide, setSelected }) {
           img.set({
             left: el.x,
             top: el.y,
-            scaleX: 0.5,
-            scaleY: 0.5
+            scaleX: el.scaleX || 0.5,
+            scaleY: el.scaleY || 0.5
           });
 
           img.customId = el.id;

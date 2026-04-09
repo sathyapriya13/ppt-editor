@@ -1,6 +1,6 @@
 import React from "react";
 
-function Ribbon({ slides, setSlides, currentSlide, selected }) {
+function Ribbon({ slides, setSlides, currentSlide, selected, onSave }) {
 
   const addText = () => {
     const updated = [...slides];
@@ -65,6 +65,9 @@ function Ribbon({ slides, setSlides, currentSlide, selected }) {
         <option>24</option>
         <option>32</option>
       </select>
+
+      {/* ✅ SAVE BUTTON */}
+      <button onClick={onSave}>Save</button>
     </div>
   );
 }

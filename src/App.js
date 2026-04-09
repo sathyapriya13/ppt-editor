@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import Sidebar from "./components/Sidebar";
 import Ribbon from "./components/Ribbon";
@@ -25,6 +25,20 @@ function App() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [selected, setSelected] = useState(null);
 
+  // ✅ LOAD saved slides
+  useEffect(() => {
+    const saved = localStorage.getItem("slides");
+    if (saved) {
+      setSlides(JSON.parse(saved));
+    }
+  }, []);
+
+  // ✅ SAVE function
+  const handleSave = () => {
+    localStorage.setItem("slides", JSON.stringify(slides));
+    alert("Saved!");
+  };
+
   return (
     <div className="app">
       <Sidebar
@@ -40,6 +54,7 @@ function App() {
           setSlides={setSlides}
           currentSlide={currentSlide}
           selected={selected}
+          onSave={handleSave}
         />
 
         <Canvas
