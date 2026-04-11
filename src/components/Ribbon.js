@@ -1,20 +1,18 @@
 import React from "react";
 
-function Ribbon({ slides, setSlides, currentSlide, selected }) {
+function Ribbon({ slides, setSlides, saveHistory, currentSlide, selected, undo, redo }) {
 
   const addText = () => {
-  const updated = [...slides];
-  updated[currentSlide].elements.push({
-    type: "text",
-    x: 100,
-    y: 100,
-    content: "New Text",
-    size: 20,
-    color: "#000"
-  });
-  setSlides(updated);
-};
-    setSlides(updated);
+    const updated = [...slides];
+    updated[currentSlide].elements.push({
+      type: "text",
+      x: 100,
+      y: 100,
+      content: "New Text",
+      size: 20,
+      color: "#000"
+    });
+    saveHistory(updated);
   };
 
   const addImage = () => {
@@ -26,26 +24,27 @@ function Ribbon({ slides, setSlides, currentSlide, selected }) {
       type: "image",
       x: 100,
       y: 100,
-      url,
-      width: 150,
-      height: 100
+      url
     });
-    setSlides(updated);
+    saveHistory(updated);
   };
 
   const updateSelected = (changes) => {
     if (!selected) return;
-    Object.assign(selected, changes);
-    setSlides([...slides]);
+
+    const updated = [...slides];
+    const el = updated[currentSlide].elements[selected.index];
+
+    updated[currentSlide].elements[selected.index] = {
+      ...el,
+      ...changes
+    };
+
+    saveHistory(updated);
   };
 
   const save = () => {
-    const data = {
-      type: "slides",
-      slides: slides
-    };
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
+    const blob = new Blob([JSON.stringify(slides)], {
       type: "application/json"
     });
 
@@ -60,18 +59,33 @@ function Ribbon({ slides, setSlides, currentSlide, selected }) {
     const reader = new FileReader();
 
     reader.onload = () => {
-      const parsed = JSON.parse(reader.result);
-      setSlides(parsed.slides); // important fix
+      setSlides(JSON.parse(reader.result));
     };
 
     reader.readAsText(file);
   };
 
   return (
-    <div className="ribbon">
-      <button onClick={addText}>Text</button>
-      <button onClick={addImage}>Image</button>
+    <div
+      className="ribbon"
+      style={{
+        background: "#ffffff",
+        padding: "10px 15px",
+        display: "flex",
+        gap: "12px",
+        alignItems: "center",
+        borderBottom: "1px solid #ddd",
+        flexWrap: "wrap"
+      }}
+    >
+      {/* Insert */}
+      <button onClick={addText}>🅣 Text</button>
+      <button onClick={addImage}>🖼 Image</button>
 
+      {/* Divider */}
+      <span>|</span>
+
+      {/* Font */}
       <select onChange={(e) => updateSelected({ size: parseInt(e.target.value) })}>
         <option>16</option>
         <option>24</option>
@@ -80,14 +94,29 @@ function Ribbon({ slides, setSlides, currentSlide, selected }) {
 
       <input type="color" onChange={(e) => updateSelected({ color: e.target.value })} />
 
-      <button onClick={() => updateSelected({ bold: !selected?.bold })}>B</button>
-      <button onClick={() => updateSelected({ italic: !selected?.italic })}>I</button>
+      <button onClick={() => updateSelected({ bold: true })}>𝗕</button>
+      <button onClick={() => updateSelected({ italic: true })}>𝘐</button>
 
-      <button onClick={() => updateSelected({ align: "left" })}>Left</button>
-      <button onClick={() => updateSelected({ align: "center" })}>Center</button>
-      <button onClick={() => updateSelected({ align: "right" })}>Right</button>
+      {/* Divider */}
+      <span>|</span>
 
-      <button onClick={save}>Save</button>
+      {/* Align */}
+      <button onClick={() => updateSelected({ align: "left" })}>⬅</button>
+      <button onClick={() => updateSelected({ align: "center" })}>⬌</button>
+      <button onClick={() => updateSelected({ align: "right" })}>➡</button>
+
+      {/* Divider */}
+      <span>|</span>
+
+      {/* Undo / Redo */}
+      <button onClick={undo}>↶ Undo</button>
+      <button onClick={redo}>↷ Redo</button>
+
+      {/* Divider */}
+      <span>|</span>
+
+      {/* File */}
+      <button onClick={save}>💾 Save</button>
       <input type="file" onChange={load} />
     </div>
   );
