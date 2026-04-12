@@ -31,7 +31,7 @@ function Canvas({ slides, currentSlide, saveHistory, setSelected }) {
         const text = new fabric.Textbox(el.content, {
           left: el.x,
           top: el.y,
-          width: el.width || 300,   // ⭐ FIX: REQUIRED for alignment
+          width: el.width || 300,
           fontSize: el.size || 20,
           fill: el.color || "#000",
           fontWeight: el.bold ? "bold" : "normal",
@@ -67,7 +67,7 @@ function Canvas({ slides, currentSlide, saveHistory, setSelected }) {
             content: text.text,
             scaleX: text.scaleX,
             scaleY: text.scaleY,
-            width: text.width   // ⭐ FIX: save width
+            width: text.width
           };
 
           saveHistory(updated);
@@ -128,19 +128,24 @@ function Canvas({ slides, currentSlide, saveHistory, setSelected }) {
     >
       <div
         style={{
-          padding: "20px",
+          padding: "35px", // increased so border is visible
           background: "rgba(255,255,255,0.6)",
-          borderRadius: "16px",
-          backdropFilter: "blur(10px)",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.2)"
+          borderRadius: "18px",
+          backdropFilter: "blur(12px)",
+          boxShadow: "0 25px 60px rgba(0,0,0,0.25)"
         }}
       >
         <canvas
           ref={canvasRef}
           style={{
-            borderRadius: "10px",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-            border: "1px solid #ddd"
+            borderRadius: "12px",
+
+            // 🔥 STRONG VISIBLE BORDER
+            border: "6px solid #4f46e5",
+
+            // 🔥 STRONG GLOW
+            boxShadow:
+              "0 0 0 6px rgba(79,70,229,0.4), 0 15px 40px rgba(0,0,0,0.35)"
           }}
         />
       </div>

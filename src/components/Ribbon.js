@@ -66,58 +66,52 @@ function Ribbon({ slides, setSlides, saveHistory, currentSlide, selected, undo, 
   };
 
   return (
-    <div
-      className="ribbon"
-      style={{
-        background: "#ffffff",
-        padding: "10px 15px",
-        display: "flex",
-        gap: "12px",
-        alignItems: "center",
-        borderBottom: "1px solid #ddd",
-        flexWrap: "wrap"
-      }}
-    >
-      {/* Insert */}
-      <button onClick={addText}>🅣 Text</button>
-      <button onClick={addImage}>🖼 Image</button>
+    <div className="ribbon">
 
-      {/* Divider */}
-      <span>|</span>
+      {/* INSERT */}
+      <div className="group">
+        <button onClick={addText}>🅣</button>
+        <button onClick={addImage}>🖼</button>
+        <span>Insert</span>
+      </div>
 
-      {/* Font */}
-      <select onChange={(e) => updateSelected({ size: parseInt(e.target.value) })}>
-        <option>16</option>
-        <option>24</option>
-        <option>32</option>
-      </select>
+      {/* TEXT STYLE */}
+      <div className="group">
+        <select onChange={(e) => updateSelected({ size: parseInt(e.target.value) })}>
+          <option>16</option>
+          <option>24</option>
+          <option>32</option>
+        </select>
 
-      <input type="color" onChange={(e) => updateSelected({ color: e.target.value })} />
+        <input type="color" onChange={(e) => updateSelected({ color: e.target.value })} />
 
-      <button onClick={() => updateSelected({ bold: true })}>𝗕</button>
-      <button onClick={() => updateSelected({ italic: true })}>𝘐</button>
+        <button onClick={() => updateSelected({ bold: true })}>B</button>
+        <button onClick={() => updateSelected({ italic: true })}>I</button>
+        <span>Text</span>
+      </div>
 
-      {/* Divider */}
-      <span>|</span>
+      {/* ALIGN */}
+      <div className="group">
+        <button onClick={() => updateSelected({ align: "left" })}>⬅</button>
+        <button onClick={() => updateSelected({ align: "center" })}>⬌</button>
+        <button onClick={() => updateSelected({ align: "right" })}>➡</button>
+        <span>Align</span>
+      </div>
 
-      {/* Align */}
-      <button onClick={() => updateSelected({ align: "left" })}>⬅</button>
-      <button onClick={() => updateSelected({ align: "center" })}>⬌</button>
-      <button onClick={() => updateSelected({ align: "right" })}>➡</button>
+      {/* HISTORY */}
+      <div className="group">
+        <button onClick={undo}>↶</button>
+        <button onClick={redo}>↷</button>
+        <span>History</span>
+      </div>
 
-      {/* Divider */}
-      <span>|</span>
+      {/* FILE */}
+      <div className="group">
+        <button onClick={save}>💾</button>
+        <input type="file" onChange={load} />
+        <span>File</span>
+      </div>
 
-      {/* Undo / Redo */}
-      <button onClick={undo}>↶ Undo</button>
-      <button onClick={redo}>↷ Redo</button>
-
-      {/* Divider */}
-      <span>|</span>
-
-      {/* File */}
-      <button onClick={save}>💾 Save</button>
-      <input type="file" onChange={load} />
     </div>
   );
 }

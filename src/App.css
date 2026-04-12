@@ -1,8 +1,8 @@
-/* Base */
+/* Global */
 body {
   margin: 0;
-  font-family: "Segoe UI", sans-serif;
-  background: #eef1f6;
+  font-family: "Segoe UI", "Inter", sans-serif;
+  background: linear-gradient(135deg, #eef2ff, #f8fafc);
 }
 
 /* Layout */
@@ -11,114 +11,141 @@ body {
   height: 100vh;
 }
 
-/* Sidebar */
+/* ===== SIDEBAR ===== */
 .sidebar {
-  width: 230px;
-  background: linear-gradient(180deg, #1e293b, #0f172a);
+  width: 260px;
+  background: linear-gradient(180deg, #0f172a, #1e293b);
   color: white;
-  padding: 15px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
+  gap: 14px;
+  box-shadow: 5px 0 25px rgba(0,0,0,0.25);
 }
 
+/* Add slide button */
 .sidebar button {
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  padding: 14px;
   border: none;
-  padding: 12px;
-  border-radius: 10px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: white;
   font-weight: 600;
-  margin-bottom: 15px;
+  font-size: 15px;
   cursor: pointer;
-  transition: 0.2s;
+  transition: 0.3s ease;
 }
 
 .sidebar button:hover {
-  transform: scale(1.05);
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.5);
 }
 
-/* Slides */
+/* Slide cards */
 .slide-item {
   background: rgba(255,255,255,0.08);
-  padding: 12px;
-  margin-bottom: 10px;
-  border-radius: 10px;
-  cursor: pointer;
+  padding: 14px;
+  border-radius: 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: 0.2s;
+  transition: 0.25s;
+  cursor: pointer;
 }
 
 .slide-item:hover {
-  background: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.18);
+  transform: translateX(3px);
 }
 
 .slide-item.active {
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6);
 }
 
-/* Main */
+/* ===== MAIN ===== */
 .main {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-/* Ribbon (GLASS STYLE) */
+/* ===== RIBBON ===== */
 .ribbon {
-  background: rgba(255,255,255,0.7);
-  backdrop-filter: blur(12px);
-  padding: 12px 15px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(14px);
+  padding: 14px 18px;
   display: flex;
-  gap: 10px;
+  gap: 14px;
+  border-bottom: 1px solid #e5e7eb;
   align-items: center;
-  border-bottom: 1px solid #ddd;
   flex-wrap: wrap;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
 }
 
-/* Buttons */
+/* Ribbon buttons */
 .ribbon button {
-  background: white;
-  border: 1px solid #ddd;
-  padding: 8px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: 0.2s;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: none;
+  background: #f1f5f9;
   font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .ribbon button:hover {
-  background: #6366f1;
-  color: white;
+  background: #e0e7ff;
   transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Active click */
+.ribbon button:active {
+  transform: scale(0.92);
 }
 
 /* Inputs */
 .ribbon select,
-.ribbon input {
+.ribbon input[type="color"] {
   padding: 6px;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid #ccc;
+  transition: 0.2s;
 }
 
-/* Canvas wrapper */
-.canvas-container {
+.ribbon select:hover,
+.ribbon input[type="color"]:hover {
+  border-color: #6366f1;
+}
+
+/* ===== CANVAS AREA ===== */
+.canvas-wrapper {
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: radial-gradient(circle, #e5e7eb, #d1d5db);
+  background: radial-gradient(circle at center, #e5e7eb, #d1d5db);
+}
+
+/* Canvas glass card */
+.canvas-card {
+  padding: 28px;
+  border-radius: 24px;
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 30px 70px rgba(0,0,0,0.25);
+  transition: 0.3s;
+}
+
+.canvas-card:hover {
+  transform: scale(1.01);
 }
 
 /* Canvas */
 canvas {
-  border-radius: 10px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-  border: 1px solid #ccc;
-  transition: 0.3s;
-}
-
-canvas:hover {
-  transform: scale(1.01);
+  border-radius: 14px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+  border: 1px solid #ddd;
+  transition: 0.2s;
 }
