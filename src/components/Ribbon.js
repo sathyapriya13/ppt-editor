@@ -1,117 +1,213 @@
-import React from "react";
+import React, { useRef } from "react";
 
-function Ribbon({ slides, setSlides, saveHistory, currentSlide, selected, undo, redo }) {
+function Ribbon({
+  slides,
+  setSlides,
+  currentSlide,
+  selectedElement,
+  setSelectedId,
+  onDeleteSelected,
+  onSave,
+}) {
+  const fileInputRef = useRef(null);
 
   const addText = () => {
-    const updated = [...slides];
-    updated[currentSlide].elements.push({
-      type: "text",
-      x: 100,
-      y: 100,
-      content: "New Text",
-      size: 20,
-      color: "#000"
+    const id = Date.now();
+
+    setSlides((prev) => {
+      const updated = [...prev];
+
+      updated[currentSlide] = {
+        ...updated[currentSlide],
+        elements: [
+          ...updated[currentSlide].elements,
+          {
+            id,
+            type: "text",
+            x: 120,
+            y: 120,
+            content: "New Text",
+            size: 28,
+            color: "#111827",
+            bold: false,
+          },
+        ],
+      };
+
+      return updated;
     });
-    saveHistory(updated);
+
+    setSelectedId(id);
   };
 
-  const addImage = () => {
-    const url = prompt("Enter image URL");
+  const addImageFromUrl = () => {
+    const url = prompt("Paste a direct image URL");
+
     if (!url) return;
 
-    const updated = [...slides];
-    updated[currentSlide].elements.push({
-      type: "image",
-      x: 100,
-      y: 100,
-      url
-    });
-    saveHistory(updated);
-  };
+    const id = Date.now();
 
-  const updateSelected = (changes) => {
-    if (!selected) return;
+    setSlides((prev) => {
+      const updated = [...prev];
 
-    const updated = [...slides];
-    const el = updated[currentSlide].elements[selected.index];
+      updated[currentSlide] = {
+        ...updated[currentSlide],
+        elements: [
+          ...updated[currentSlide].elements,
+          {
+            id,
+            type: "image",
+            x: 120,
+            y: 120,
+            url,
+            scaleX: 0.5,
+            scaleY: 0.5,
+          },
+        ],
+      };
 
-    updated[currentSlide].elements[selected.index] = {
-      ...el,
-      ...changes
-    };
-
-    saveHistory(updated);
-  };
-
-  const save = () => {
-    const blob = new Blob([JSON.stringify(slides)], {
-      type: "application/json"
+      return updated;
     });
 
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "slides.json";
-    a.click();
+    setSelectedId(id);
   };
 
-  const load = (e) => {
-    const file = e.target.files[0];
+  const uploadImage = (file) => {
+    if (!file) return;
+
     const reader = new FileReader();
 
     reader.onload = () => {
-      setSlides(JSON.parse(reader.result));
+      const imageUrl = reader.result;
+      const id = Date.now();
+
+      setSlides((prev) => {
+        const updated = [...prev];
+
+        updated[currentSlide] = {
+          ...updated[currentSlide],
+          elements: [
+            ...updated[currentSlide].elements,
+            {
+              id,
+              type: "image",
+              x: 120,
+              y: 120,
+              url: imageUrl,
+              scaleX: 0.5,
+              scaleY: 0.5,
+            },
+          ],
+        };
+
+        return updated;
+      });
+
+      setSelectedId(id);
     };
 
-    reader.readAsText(file);
+    reader.readAsDataURL(file);
+  };
+
+  const updateSelected = (changes) => {
+    if (!selectedElement) return;
+
+    setSlides((prev) => {
+      const updated = [...prev];
+
+      updated[currentSlide] = {
+        ...updated[currentSlide],
+        elements: updated[currentSlide].elements.map((item) =>
+          item.id === selectedElement.id ? { ...item, ...changes } : item
+        ),
+      };
+
+      return updated;
+    });
   };
 
   return (
     <div className="ribbon">
+      <div className="toolbar-group">
+        <button onClick={addText}>Text</button>
+        <button onClick={addImageFromUrl}>Image URL</button>
 
-      {/* INSERT */}
-      <div className="group">
-        <button onClick={addText}>🅣</button>
-        <button onClick={addImage}>🖼</button>
-        <span>Insert</span>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: "none" }}
+          onChange={(e) => {
+            const file = e.target.files[0];
+
+            if (file) {
+              uploadImage(file);
+              e.target.value = "";
+            }
+          }}
+        />
+
+        <button onClick={() => fileInputRef.current.click()}>
+          Upload Image
+        </button>
       </div>
 
-      {/* TEXT STYLE */}
-      <div className="group">
-        <select onChange={(e) => updateSelected({ size: parseInt(e.target.value) })}>
-          <option>16</option>
-          <option>24</option>
-          <option>32</option>
+      <div className="toolbar-divider" />
+
+      <div className="toolbar-group">
+        <button
+          disabled={!selectedElement || selectedElement.type !== "text"}
+          onClick={() =>
+            updateSelected({
+              bold: !selectedElement?.bold,
+            })
+          }
+        >
+          Bold
+        </button>
+
+        <input
+          type="color"
+          disabled={!selectedElement || selectedElement.type !== "text"}
+          value={selectedElement?.color || "#111827"}
+          onChange={(e) =>
+            updateSelected({
+              color: e.target.value,
+            })
+          }
+        />
+
+        <select
+          disabled={!selectedElement || selectedElement.type !== "text"}
+          value={selectedElement?.size || 28}
+          onChange={(e) =>
+            updateSelected({
+              size: parseInt(e.target.value),
+            })
+          }
+        >
+          <option value="16">16</option>
+          <option value="20">20</option>
+          <option value="24">24</option>
+          <option value="28">28</option>
+          <option value="32">32</option>
+          <option value="40">40</option>
+          <option value="48">48</option>
+          <option value="64">64</option>
         </select>
 
-        <input type="color" onChange={(e) => updateSelected({ color: e.target.value })} />
-
-        <button onClick={() => updateSelected({ bold: true })}>B</button>
-        <button onClick={() => updateSelected({ italic: true })}>I</button>
-        <span>Text</span>
+        <button
+          className="delete-btn"
+          disabled={!selectedElement}
+          onClick={onDeleteSelected}
+        >
+          Delete
+        </button>
       </div>
 
-      {/* ALIGN */}
-      <div className="group">
-        <button onClick={() => updateSelected({ align: "left" })}>⬅</button>
-        <button onClick={() => updateSelected({ align: "center" })}>⬌</button>
-        <button onClick={() => updateSelected({ align: "right" })}>➡</button>
-        <span>Align</span>
-      </div>
-
-      {/* HISTORY */}
-      <div className="group">
-        <button onClick={undo}>↶</button>
-        <button onClick={redo}>↷</button>
-        <span>History</span>
-      </div>
-
-      {/* FILE */}
-      <div className="group">
-        <button onClick={save}>💾</button>
-        <input type="file" onChange={load} />
-        <span>File</span>
-      </div>
-
+      <button className="save-btn" onClick={onSave}>
+        Save
+      </button>
     </div>
   );
 }

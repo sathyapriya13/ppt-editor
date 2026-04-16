@@ -1,151 +1,241 @@
-/* Global */
-body {
-  margin: 0;
-  font-family: "Segoe UI", "Inter", sans-serif;
-  background: linear-gradient(135deg, #eef2ff, #f8fafc);
+* {
+  box-sizing: border-box;
 }
 
-/* Layout */
+body {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  background: #f5f7fb;
+  color: #111827;
+}
+
 .app {
   display: flex;
   height: 100vh;
+  overflow: hidden;
 }
 
-/* ===== SIDEBAR ===== */
 .sidebar {
   width: 260px;
-  background: linear-gradient(180deg, #0f172a, #1e293b);
-  color: white;
-  padding: 18px;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  box-shadow: 5px 0 25px rgba(0,0,0,0.25);
 }
 
-/* Add slide button */
-.sidebar button {
-  padding: 14px;
-  border: none;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: white;
-  font-weight: 600;
-  font-size: 15px;
-  cursor: pointer;
-  transition: 0.3s ease;
-}
-
-.sidebar button:hover {
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.5);
-}
-
-/* Slide cards */
-.slide-item {
-  background: rgba(255,255,255,0.08);
-  padding: 14px;
-  border-radius: 14px;
+.sidebar-header {
+  height: 64px;
+  padding: 0 18px;
+  border-bottom: 1px solid #e5e7eb;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  transition: 0.25s;
+  justify-content: space-between;
+}
+
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.sidebar-header span {
+  background: #eef2ff;
+  color: #4f46e5;
+  font-size: 13px;
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+
+.slide-list {
+  flex: 1;
+  padding: 14px;
+  overflow-y: auto;
+}
+
+.slide-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  margin-bottom: 14px;
+  background: #ffffff;
+  overflow: hidden;
   cursor: pointer;
+  transition: 0.2s ease;
 }
 
 .slide-item:hover {
-  background: rgba(255,255,255,0.18);
-  transform: translateX(3px);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
 .slide-item.active {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6);
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
 }
 
-/* ===== MAIN ===== */
+.slide-preview {
+  height: 120px;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c7d2fe;
+  font-size: 42px;
+  font-weight: 800;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.slide-footer {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slide-footer span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.slide-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.slide-actions button {
+  flex: 1;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 6px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.slide-actions button:hover {
+  background: #eef2ff;
+}
+
+.small-delete {
+  color: #dc2626;
+}
+
+.slide-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.add-slide-btn {
+  margin: 14px;
+  padding: 13px;
+  border: none;
+  border-radius: 12px;
+  background: #4f46e5;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.25);
+}
+
+.add-slide-btn:hover {
+  background: #4338ca;
+}
+
 .main {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
-/* ===== RIBBON ===== */
 .ribbon {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(14px);
-  padding: 14px 18px;
-  display: flex;
-  gap: 14px;
+  height: 64px;
+  background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
-  align-items: center;
-  flex-wrap: wrap;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-}
-
-/* Ribbon buttons */
-.ribbon button {
-  padding: 8px 14px;
-  border-radius: 10px;
-  border: none;
-  background: #f1f5f9;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.ribbon button:hover {
-  background: #e0e7ff;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-
-/* Active click */
-.ribbon button:active {
-  transform: scale(0.92);
-}
-
-/* Inputs */
-.ribbon select,
-.ribbon input[type="color"] {
-  padding: 6px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  transition: 0.2s;
-}
-
-.ribbon select:hover,
-.ribbon input[type="color"]:hover {
-  border-color: #6366f1;
-}
-
-/* ===== CANVAS AREA ===== */
-.canvas-wrapper {
-  flex: 1;
   display: flex;
-  justify-content: center;
   align-items: center;
-  background: radial-gradient(circle at center, #e5e7eb, #d1d5db);
+  gap: 12px;
+  padding: 0 24px;
 }
 
-/* Canvas glass card */
-.canvas-card {
-  padding: 28px;
-  border-radius: 24px;
-  background: rgba(255,255,255,0.6);
-  backdrop-filter: blur(14px);
-  box-shadow: 0 30px 70px rgba(0,0,0,0.25);
-  transition: 0.3s;
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.canvas-card:hover {
-  transform: scale(1.01);
+.toolbar-divider {
+  width: 1px;
+  height: 32px;
+  background: #e5e7eb;
 }
 
-/* Canvas */
-canvas {
-  border-radius: 14px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-  border: 1px solid #ddd;
-  transition: 0.2s;
+.ribbon button,
+.ribbon select {
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 9px 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ribbon button:hover,
+.ribbon select:hover {
+  background: #f8fafc;
+}
+
+.ribbon button:disabled,
+.ribbon select:disabled,
+.ribbon input:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ribbon input[type="color"] {
+  width: 42px;
+  height: 38px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.delete-btn {
+  color: #dc2626;
+}
+
+.delete-btn:hover {
+  background: #fef2f2 !important;
+}
+
+.save-btn {
+  margin-left: auto;
+  background: #4f46e5 !important;
+  color: #ffffff;
+  border-color: #4f46e5 !important;
+  box-shadow: 0 10px 22px rgba(79, 70, 229, 0.22);
+}
+
+.save-btn:hover {
+  background: #4338ca !important;
+}
+
+.canvas-container {
+  flex: 1;
+  padding: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle, rgba(79, 70, 229, 0.06) 1px, transparent 1px),
+    #f5f7fb;
+  background-size: 22px 22px;
+  overflow: auto;
+}
+
+.canvas-shell {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
 }

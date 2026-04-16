@@ -1,115 +1,166 @@
 import React, { useEffect, useRef } from "react";
 import { fabric } from "fabric";
 
-function Canvas({ slides, currentSlide, saveHistory, setSelected }) {
+function Canvas({ slides, setSlides, currentSlide, setSelectedId }) {
   const canvasRef = useRef(null);
   const fabricRef = useRef(null);
+  const currentSlideRef = useRef(currentSlide);
 
   useEffect(() => {
-    fabricRef.current = new fabric.Canvas(canvasRef.current, {
-      width: 960,
-      height: 540,
+    currentSlideRef.current = currentSlide;
+  }, [currentSlide]);
+
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    const canvas = new fabric.Canvas(canvasRef.current, {
+      width: 900,
+      height: 500,
       backgroundColor: "#ffffff",
-      selection: true
+      preserveObjectStacking: true,
+    });
+
+    fabricRef.current = canvas;
+
+    canvas.on("selection:created", (e) => {
+      if (e.selected && e.selected[0]) {
+        setSelectedId(e.selected[0].customId);
+      }
+    });
+
+    canvas.on("selection:updated", (e) => {
+      if (e.selected && e.selected[0]) {
+        setSelectedId(e.selected[0].customId);
+      }
+    });
+
+    canvas.on("selection:cleared", () => {
+      setSelectedId(null);
+    });
+
+    canvas.on("object:modified", (e) => {
+      const obj = e.target;
+
+      if (!obj || !obj.customId) return;
+
+      setSlides((prev) => {
+        const updated = [...prev];
+        const activeSlideIndex = currentSlideRef.current;
+        const slide = updated[activeSlideIndex];
+
+        if (!slide) return prev;
+
+        updated[activeSlideIndex] = {
+          ...slide,
+          elements: slide.elements.map((item) =>
+            item.id === obj.customId
+              ? {
+                  ...item,
+                  x: obj.left || 0,
+                  y: obj.top || 0,
+                  scaleX: obj.scaleX || 1,
+                  scaleY: obj.scaleY || 1,
+                }
+              : item
+          ),
+        };
+
+        return updated;
+      });
+    });
+
+    canvas.on("text:changed", (e) => {
+      const obj = e.target;
+
+      if (!obj || !obj.customId) return;
+
+      setSlides((prev) => {
+        const updated = [...prev];
+        const activeSlideIndex = currentSlideRef.current;
+        const slide = updated[activeSlideIndex];
+
+        if (!slide) return prev;
+
+        updated[activeSlideIndex] = {
+          ...slide,
+          elements: slide.elements.map((item) =>
+            item.id === obj.customId
+              ? {
+                  ...item,
+                  content: obj.text || "",
+                }
+              : item
+          ),
+        };
+
+        return updated;
+      });
     });
 
     return () => {
-      fabricRef.current.dispose();
+      canvas.dispose();
     };
-  }, []);
+  }, [setSelectedId, setSlides]);
 
   useEffect(() => {
     const canvas = fabricRef.current;
+
     if (!canvas) return;
 
     canvas.clear();
+    canvas.setBackgroundColor("#ffffff", canvas.renderAll.bind(canvas));
 
-    const elements = slides[currentSlide].elements;
+    const elements = slides[currentSlide]?.elements || [];
 
-    elements.forEach((el, index) => {
+    elements.forEach((el) => {
       if (el.type === "text") {
-        const text = new fabric.Textbox(el.content, {
+        const text = new fabric.Textbox(el.content || "Text", {
           left: el.x,
           top: el.y,
-          width: el.width || 300,
-          fontSize: el.size || 20,
-          fill: el.color || "#000",
+          fontSize: el.size || 28,
+          fill: el.color || "#111827",
           fontWeight: el.bold ? "bold" : "normal",
-          fontStyle: el.italic ? "italic" : "normal",
-          textAlign: el.align || "left",
-          editable: true,
           scaleX: el.scaleX || 1,
           scaleY: el.scaleY || 1,
-
-          borderColor: "#6366f1",
-          cornerColor: "#6366f1",
+          fontFamily: "Arial",
+          transparentCorners: false,
+          cornerColor: "#4f46e5",
+          cornerStrokeColor: "#4f46e5",
+          borderColor: "#4f46e5",
           cornerSize: 8,
-          transparentCorners: false
+          padding: 5,
         });
 
-        text.on("selected", () => {
-          setSelected({ index });
-        });
-
-        text.on("mousedblclick", () => {
-          canvas.setActiveObject(text);
-          text.enterEditing();
-          text.selectAll();
-        });
-
-        text.on("modified", () => {
-          const updated = [...slides];
-
-          updated[currentSlide].elements[index] = {
-            ...updated[currentSlide].elements[index],
-            x: text.left,
-            y: text.top,
-            content: text.text,
-            scaleX: text.scaleX,
-            scaleY: text.scaleY,
-            width: text.width
-          };
-
-          saveHistory(updated);
-        });
-
+        text.customId = el.id;
         canvas.add(text);
       }
 
-      if (el.type === "image") {
-        fabric.Image.fromURL(el.url, (img) => {
-          img.set({
-            left: el.x,
-            top: el.y,
-            scaleX: el.scaleX || 0.5,
-            scaleY: el.scaleY || 0.5,
+      if (el.type === "image" && el.url) {
+        fabric.Image.fromURL(
+          el.url,
+          (img) => {
+            img.set({
+              left: el.x,
+              top: el.y,
+              scaleX: el.scaleX || 0.5,
+              scaleY: el.scaleY || 0.5,
+              transparentCorners: false,
+              cornerColor: "#4f46e5",
+              cornerStrokeColor: "#4f46e5",
+              borderColor: "#4f46e5",
+              cornerSize: 8,
+              padding: 5,
+            });
 
-            borderColor: "#6366f1",
-            cornerColor: "#6366f1",
-            cornerSize: 8,
-            transparentCorners: false
-          });
+            img.customId = el.id;
 
-          img.on("selected", () => {
-            setSelected({ index });
-          });
-
-          img.on("modified", () => {
-            const updated = [...slides];
-
-            updated[currentSlide].elements[index] = {
-              ...updated[currentSlide].elements[index],
-              x: img.left,
-              y: img.top,
-              scaleX: img.scaleX,
-              scaleY: img.scaleY
-            };
-
-            saveHistory(updated);
-          });
-
-          canvas.add(img);
-        });
+            canvas.add(img);
+            canvas.renderAll();
+          },
+          el.url.startsWith("data:")
+            ? undefined
+            : { crossOrigin: "anonymous" }
+        );
       }
     });
 
@@ -117,37 +168,9 @@ function Canvas({ slides, currentSlide, saveHistory, setSelected }) {
   }, [slides, currentSlide]);
 
   return (
-    <div
-      style={{
-        flex: 1,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "radial-gradient(circle, #e5e7eb, #d1d5db)"
-      }}
-    >
-      <div
-        style={{
-          padding: "35px", // increased so border is visible
-          background: "rgba(255,255,255,0.6)",
-          borderRadius: "18px",
-          backdropFilter: "blur(12px)",
-          boxShadow: "0 25px 60px rgba(0,0,0,0.25)"
-        }}
-      >
-        <canvas
-          ref={canvasRef}
-          style={{
-            borderRadius: "12px",
-
-            // 🔥 STRONG VISIBLE BORDER
-            border: "6px solid #4f46e5",
-
-            // 🔥 STRONG GLOW
-            boxShadow:
-              "0 0 0 6px rgba(79,70,229,0.4), 0 15px 40px rgba(0,0,0,0.35)"
-          }}
-        />
+    <div className="canvas-container">
+      <div className="canvas-shell">
+        <canvas ref={canvasRef} />
       </div>
     </div>
   );

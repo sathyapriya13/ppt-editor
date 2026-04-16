@@ -1,56 +1,83 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import Sidebar from "./components/Sidebar";
 import Ribbon from "./components/Ribbon";
 import Canvas from "./components/Canvas";
 
 function App() {
-  const [slides, setSlides] = useState([{ elements: [] }]);
+  const [slides, setSlides] = useState([
+    {
+      elements: [
+        {
+          id: Date.now(),
+          type: "text",
+          x: 330,
+          y: 180,
+          content: "Welcome",
+          size: 46,
+          color: "#111827",
+          bold: true,
+        },
+        {
+          id: Date.now() + 1,
+          type: "text",
+          x: 335,
+          y: 260,
+          content: "A simple presentation editor",
+          size: 24,
+          color: "#6b7280",
+          bold: false,
+        },
+      ],
+    },
+  ]);
+
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [selected, setSelected] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
 
-  const [history, setHistory] = useState([]);
-  const [redoStack, setRedoStack] = useState([]);
+  useEffect(() => {
+    const saved = localStorage.getItem("slides");
 
-  // ✅ FIXED: deep copy + correct state
-  const saveHistory = (newSlides) => {
-    setHistory((prev) => [
-      ...prev,
-      JSON.parse(JSON.stringify(slides)) // 🔥 FIX
-    ]);
-    setRedoStack([]);
-    setSlides(newSlides);
+    if (saved) {
+      try {
+        const parsedSlides = JSON.parse(saved);
+
+        if (Array.isArray(parsedSlides) && parsedSlides.length > 0) {
+          setSlides(parsedSlides);
+        }
+      } catch {
+        localStorage.removeItem("slides");
+      }
+    }
+  }, []);
+
+  const handleSave = () => {
+    localStorage.setItem("slides", JSON.stringify(slides));
+    alert("Presentation saved!");
   };
 
-  // ✅ FIXED undo
-  const undo = () => {
-    if (history.length === 0) return;
+  const deleteSelectedElement = () => {
+    if (!selectedId) return;
 
-    const prev = history[history.length - 1];
+    setSlides((prev) => {
+      const updated = [...prev];
 
-    setRedoStack((r) => [
-      JSON.parse(JSON.stringify(slides)), // 🔥 FIX
-      ...r
-    ]);
+      updated[currentSlide] = {
+        ...updated[currentSlide],
+        elements: updated[currentSlide].elements.filter(
+          (item) => item.id !== selectedId
+        ),
+      };
 
-    setSlides(prev);
-    setHistory((h) => h.slice(0, -1));
+      return updated;
+    });
+
+    setSelectedId(null);
   };
 
-  // ✅ FIXED redo
-  const redo = () => {
-    if (redoStack.length === 0) return;
-
-    const next = redoStack[0];
-
-    setHistory((h) => [
-      ...h,
-      JSON.parse(JSON.stringify(slides)) // 🔥 FIX
-    ]);
-
-    setSlides(next);
-    setRedoStack((r) => r.slice(1));
-  };
+  const selectedElement =
+    slides[currentSlide]?.elements.find((item) => item.id === selectedId) ||
+    null;
 
   return (
     <div className="app">
@@ -59,24 +86,25 @@ function App() {
         currentSlide={currentSlide}
         setCurrentSlide={setCurrentSlide}
         setSlides={setSlides}
+        setSelectedId={setSelectedId}
       />
 
       <div className="main">
         <Ribbon
           slides={slides}
           setSlides={setSlides}
-          saveHistory={saveHistory}
           currentSlide={currentSlide}
-          selected={selected}
-          undo={undo}
-          redo={redo}
+          selectedElement={selectedElement}
+          setSelectedId={setSelectedId}
+          onDeleteSelected={deleteSelectedElement}
+          onSave={handleSave}
         />
 
         <Canvas
           slides={slides}
+          setSlides={setSlides}
           currentSlide={currentSlide}
-          saveHistory={saveHistory}
-          setSelected={setSelected}
+          setSelectedId={setSelectedId}
         />
       </div>
     </div>
