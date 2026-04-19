@@ -1,21 +1,22 @@
 import React, { useEffect, useRef } from "react";
 import { fabric } from "fabric";
 
-function Canvas({ slides, setSlides, currentSlide, setSelectedId }) {
+function Canvas({
+  slides,
+  currentSlide,
+  zoom,
+  setSelectedId,
+  updateElementFromCanvas,
+}) {
   const canvasRef = useRef(null);
   const fabricRef = useRef(null);
-  const currentSlideRef = useRef(currentSlide);
-
-  useEffect(() => {
-    currentSlideRef.current = currentSlide;
-  }, [currentSlide]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
 
     const canvas = new fabric.Canvas(canvasRef.current, {
-      width: 900,
-      height: 500,
+      width: 960,
+      height: 540,
       backgroundColor: "#ffffff",
       preserveObjectStacking: true,
     });
@@ -43,29 +44,11 @@ function Canvas({ slides, setSlides, currentSlide, setSelectedId }) {
 
       if (!obj || !obj.customId) return;
 
-      setSlides((prev) => {
-        const updated = [...prev];
-        const activeSlideIndex = currentSlideRef.current;
-        const slide = updated[activeSlideIndex];
-
-        if (!slide) return prev;
-
-        updated[activeSlideIndex] = {
-          ...slide,
-          elements: slide.elements.map((item) =>
-            item.id === obj.customId
-              ? {
-                  ...item,
-                  x: obj.left || 0,
-                  y: obj.top || 0,
-                  scaleX: obj.scaleX || 1,
-                  scaleY: obj.scaleY || 1,
-                }
-              : item
-          ),
-        };
-
-        return updated;
+      updateElementFromCanvas(obj.customId, {
+        x: obj.left || 0,
+        y: obj.top || 0,
+        scaleX: obj.scaleX || 1,
+        scaleY: obj.scaleY || 1,
       });
     });
 
@@ -74,33 +57,15 @@ function Canvas({ slides, setSlides, currentSlide, setSelectedId }) {
 
       if (!obj || !obj.customId) return;
 
-      setSlides((prev) => {
-        const updated = [...prev];
-        const activeSlideIndex = currentSlideRef.current;
-        const slide = updated[activeSlideIndex];
-
-        if (!slide) return prev;
-
-        updated[activeSlideIndex] = {
-          ...slide,
-          elements: slide.elements.map((item) =>
-            item.id === obj.customId
-              ? {
-                  ...item,
-                  content: obj.text || "",
-                }
-              : item
-          ),
-        };
-
-        return updated;
+      updateElementFromCanvas(obj.customId, {
+        content: obj.text || "",
       });
     });
 
     return () => {
       canvas.dispose();
     };
-  }, [setSelectedId, setSlides]);
+  }, [setSelectedId, updateElementFromCanvas]);
 
   useEffect(() => {
     const canvas = fabricRef.current;
@@ -114,19 +79,19 @@ function Canvas({ slides, setSlides, currentSlide, setSelectedId }) {
 
     elements.forEach((el) => {
       if (el.type === "text") {
-        const text = new fabric.Textbox(el.content || "Text", {
+        const text = new fabric.Textbox(el.content || "Text box", {
           left: el.x,
           top: el.y,
           fontSize: el.size || 28,
-          fill: el.color || "#111827",
+          fill: el.color || "#1F6F5F",
           fontWeight: el.bold ? "bold" : "normal",
           scaleX: el.scaleX || 1,
           scaleY: el.scaleY || 1,
           fontFamily: "Arial",
           transparentCorners: false,
-          cornerColor: "#4f46e5",
-          cornerStrokeColor: "#4f46e5",
-          borderColor: "#4f46e5",
+          cornerColor: "#2FA084",
+          cornerStrokeColor: "#2FA084",
+          borderColor: "#2FA084",
           cornerSize: 8,
           padding: 5,
         });
@@ -145,9 +110,9 @@ function Canvas({ slides, setSlides, currentSlide, setSelectedId }) {
               scaleX: el.scaleX || 0.5,
               scaleY: el.scaleY || 0.5,
               transparentCorners: false,
-              cornerColor: "#4f46e5",
-              cornerStrokeColor: "#4f46e5",
-              borderColor: "#4f46e5",
+              cornerColor: "#2FA084",
+              cornerStrokeColor: "#2FA084",
+              borderColor: "#2FA084",
               cornerSize: 8,
               padding: 5,
             });
@@ -162,6 +127,56 @@ function Canvas({ slides, setSlides, currentSlide, setSelectedId }) {
             : { crossOrigin: "anonymous" }
         );
       }
+
+      if (el.type === "shape") {
+        let shape;
+
+        const commonOptions = {
+          left: el.x,
+          top: el.y,
+          fill: el.fill || "#6FCF97",
+          stroke: el.stroke || "#2FA084",
+          strokeWidth: 2,
+          scaleX: el.scaleX || 1,
+          scaleY: el.scaleY || 1,
+          transparentCorners: false,
+          cornerColor: "#2FA084",
+          cornerStrokeColor: "#2FA084",
+          borderColor: "#2FA084",
+          cornerSize: 8,
+        };
+
+        if (el.shape === "circle") {
+          shape = new fabric.Circle({
+            ...commonOptions,
+            radius: 55,
+          });
+        } else if (el.shape === "triangle") {
+          shape = new fabric.Triangle({
+            ...commonOptions,
+            width: 130,
+            height: 110,
+          });
+        } else if (el.shape === "line") {
+          shape = new fabric.Line([0, 0, 180, 0], {
+            ...commonOptions,
+            fill: undefined,
+            stroke: el.stroke || "#2FA084",
+            strokeWidth: 4,
+          });
+        } else {
+          shape = new fabric.Rect({
+            ...commonOptions,
+            width: el.width || 150,
+            height: el.height || 95,
+            rx: 6,
+            ry: 6,
+          });
+        }
+
+        shape.customId = el.id;
+        canvas.add(shape);
+      }
     });
 
     canvas.renderAll();
@@ -169,7 +184,12 @@ function Canvas({ slides, setSlides, currentSlide, setSelectedId }) {
 
   return (
     <div className="canvas-container">
-      <div className="canvas-shell">
+      <div
+        className="canvas-shell"
+        style={{
+          transform: `scale(${zoom / 100})`,
+        }}
+      >
         <canvas ref={canvasRef} />
       </div>
     </div>

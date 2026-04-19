@@ -1,57 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 
 function Sidebar({
   slides,
   currentSlide,
   setCurrentSlide,
-  setSlides,
+  addSlide,
+  deleteSlide,
+  moveSlideUp,
+  moveSlideDown,
+  reorderSlides,
   setSelectedId,
 }) {
-  const addSlide = () => {
-    setSlides([...slides, { elements: [] }]);
-    setCurrentSlide(slides.length);
-    setSelectedId(null);
-  };
-
-  const deleteSlide = (index) => {
-    if (slides.length === 1) return;
-
-    const updated = slides.filter((_, i) => i !== index);
-
-    setSlides(updated);
-    setCurrentSlide(index === 0 ? 0 : index - 1);
-    setSelectedId(null);
-  };
-
-  const moveUp = (index) => {
-    if (index === 0) return;
-
-    const updated = [...slides];
-
-    [updated[index], updated[index - 1]] = [
-      updated[index - 1],
-      updated[index],
-    ];
-
-    setSlides(updated);
-    setCurrentSlide(index - 1);
-    setSelectedId(null);
-  };
-
-  const moveDown = (index) => {
-    if (index === slides.length - 1) return;
-
-    const updated = [...slides];
-
-    [updated[index], updated[index + 1]] = [
-      updated[index + 1],
-      updated[index],
-    ];
-
-    setSlides(updated);
-    setCurrentSlide(index + 1);
-    setSelectedId(null);
-  };
+  const [draggingIndex, setDraggingIndex] = useState(null);
 
   return (
     <div className="sidebar">
@@ -64,12 +24,38 @@ function Sidebar({
         {slides.map((_, index) => (
           <div
             key={index}
-            className={`slide-item ${index === currentSlide ? "active" : ""}`}
+            draggable
+            className={`slide-item ${index === currentSlide ? "active" : ""} ${
+              draggingIndex === index ? "dragging" : ""
+            }`}
             onClick={() => {
               setCurrentSlide(index);
               setSelectedId(null);
             }}
+            onDragStart={(e) => {
+              setDraggingIndex(index);
+              e.dataTransfer.setData("slideIndex", index);
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+
+              const fromIndex = parseInt(e.dataTransfer.getData("slideIndex"));
+
+              if (!Number.isNaN(fromIndex)) {
+                reorderSlides(fromIndex, index);
+              }
+
+              setDraggingIndex(null);
+            }}
+            onDragEnd={() => {
+              setDraggingIndex(null);
+            }}
           >
+            <div className="slide-number">{index + 1}</div>
+
             <div className="slide-preview">{index + 1}</div>
 
             <div className="slide-footer">
@@ -79,8 +65,9 @@ function Sidebar({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    moveUp(index);
+                    moveSlideUp(index);
                   }}
+                  disabled={index === 0}
                 >
                   Up
                 </button>
@@ -88,8 +75,9 @@ function Sidebar({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    moveDown(index);
+                    moveSlideDown(index);
                   }}
+                  disabled={index === slides.length - 1}
                 >
                   Down
                 </button>
@@ -111,7 +99,7 @@ function Sidebar({
       </div>
 
       <button className="add-slide-btn" onClick={addSlide}>
-        Add Slide
+        + Add Slide
       </button>
     </div>
   );
