@@ -46,7 +46,6 @@ function Ribbon({
             style={{ display: "none" }}
             onChange={(e) => {
               const file = e.target.files[0];
-
               if (file) {
                 importPresentation(file);
                 e.target.value = "";
@@ -95,7 +94,6 @@ function Ribbon({
         <div className="toolbar-divider" />
 
         <button onClick={addTextBox}>Text box</button>
-
         <button onClick={addImageFromUrl}>Image URL</button>
 
         <input
@@ -105,7 +103,6 @@ function Ribbon({
           style={{ display: "none" }}
           onChange={(e) => {
             const file = e.target.files[0];
-
             if (file) {
               uploadImage(file);
               e.target.value = "";
@@ -163,7 +160,7 @@ function Ribbon({
           value={selectedElement?.size || 28}
           onChange={(e) =>
             updateSelectedElement({
-              size: parseInt(e.target.value),
+              size: parseInt(e.target.value, 10),
             })
           }
         >
@@ -195,9 +192,7 @@ function Ribbon({
           <button onClick={zoomOut} disabled={zoom <= 50}>
             -
           </button>
-
           <span>{zoom}%</span>
-
           <button onClick={zoomIn} disabled={zoom >= 150}>
             +
           </button>

@@ -47,11 +47,8 @@ function App() {
 
     if (saved) {
       try {
-        const parsedSlides = JSON.parse(saved);
-
-        if (Array.isArray(parsedSlides) && parsedSlides.length > 0) {
-          setSlides(parsedSlides);
-        }
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) setSlides(parsed);
       } catch {
         localStorage.removeItem("slides");
       }
@@ -66,6 +63,208 @@ function App() {
   const handleSave = () => {
     localStorage.setItem("slides", JSON.stringify(slides));
     alert("Presentation saved!");
+  };
+
+  const undo = () => {
+    if (past.length === 0) return;
+    const previous = past[past.length - 1];
+
+    setFuture((prev) => [slides, ...prev]);
+    setSlides(previous);
+    setPast((prev) => prev.slice(0, -1));
+    setSelectedId(null);
+  };
+
+  const redo = () => {
+    if (future.length === 0) return;
+    const next = future[0];
+
+    setPast((prev) => [...prev, slides]);
+    setSlides(next);
+    setFuture((prev) => prev.slice(1));
+    setSelectedId(null);
+  };
+
+  const addSlide = () => {
+    saveHistory();
+    setSlides((prev) => [...prev, { elements: [], notes: "" }]);
+    setCurrentSlide(slides.length);
+    setSelectedId(null);
+  };
+
+  const deleteSlide = (index) => {
+    if (slides.length === 1) return;
+
+    saveHistory();
+    const updated = slides.filter((_, i) => i !== index);
+
+    setSlides(updated);
+    setCurrentSlide(index === 0 ? 0 : index - 1);
+    setSelectedId(null);
+  };
+
+  const reorderSlides = (fromIndex, toIndex) => {
+    if (fromIndex === toIndex) return;
+
+    saveHistory();
+
+    const updated = [...slides];
+    const [moved] = updated.splice(fromIndex, 1);
+    updated.splice(toIndex, 0, moved);
+
+    setSlides(updated);
+    setCurrentSlide(toIndex);
+    setSelectedId(null);
+  };
+
+  const moveSlideUp = (index) => {
+    if (index === 0) return;
+    reorderSlides(index, index - 1);
+  };
+
+  const moveSlideDown = (index) => {
+    if (index === slides.length - 1) return;
+    reorderSlides(index, index + 1);
+  };
+
+  const addElement = (element) => {
+    saveHistory();
+
+    const id = element.id || Date.now();
+
+    setSlides((prev) => {
+      const updated = [...prev];
+
+      updated[currentSlide] = {
+        ...updated[currentSlide],
+        elements: [...updated[currentSlide].elements, { ...element, id }],
+      };
+
+      return updated;
+    });
+
+    setSelectedId(id);
+  };
+
+  const addTextBox = () => {
+    addElement({
+      type: "text",
+      x: 120,
+      y: 120,
+      content: "Text box",
+      size: 28,
+      color: "#1F6F5F",
+      bold: false,
+    });
+  };
+
+  const addImageFromUrl = () => {
+    const url = prompt("Paste a direct image URL");
+    if (!url) return;
+
+    addElement({
+      type: "image",
+      x: 120,
+      y: 120,
+      url,
+      scaleX: 0.5,
+      scaleY: 0.5,
+    });
+  };
+
+  const uploadImage = (file) => {
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      addElement({
+        type: "image",
+        x: 120,
+        y: 120,
+        url: reader.result,
+        scaleX: 0.5,
+        scaleY: 0.5,
+      });
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  const addShape = (shapeType) => {
+    addElement({
+      type: "shape",
+      shape: shapeType,
+      x: 140,
+      y: 140,
+      width: 140,
+      height: 90,
+      fill: shapeType === "line" ? "transparent" : "#6FCF97",
+      stroke: "#2FA084",
+      scaleX: 1,
+      scaleY: 1,
+    });
+  };
+
+  const updateElementFromCanvas = (id, changes) => {
+    setSlides((prev) => {
+      const updated = [...prev];
+
+      updated[currentSlide] = {
+        ...updated[currentSlide],
+        elements: updated[currentSlide].elements.map((item) =>
+          item.id === id ? { ...item, ...changes } : item
+        ),
+      };
+
+      return updated;
+    });
+  };
+
+  const updateSelectedElement = (changes) => {
+    if (!selectedId) return;
+
+    saveHistory();
+    updateElementFromCanvas(selectedId, changes);
+  };
+
+  const deleteSelectedElement = () => {
+    if (!selectedId) return;
+
+    saveHistory();
+
+    setSlides((prev) => {
+      const updated = [...prev];
+
+      updated[currentSlide] = {
+        ...updated[currentSlide],
+        elements: updated[currentSlide].elements.filter(
+          (item) => item.id !== selectedId
+        ),
+      };
+
+      return updated;
+    });
+
+    setSelectedId(null);
+  };
+
+  const updateSlideNotes = (value) => {
+    setSlides((prev) => {
+      const updated = [...prev];
+
+      updated[currentSlide] = {
+        ...updated[currentSlide],
+        notes: value,
+      };
+
+      return updated;
+    });
+  };
+
+  const openPresenterMode = () => {
+    setPresenterIndex(currentSlide);
+    setPresenterOpen(true);
   };
 
   const exportPresentation = () => {
@@ -113,315 +312,6 @@ function App() {
     reader.readAsText(file);
   };
 
-  const undo = () => {
-    if (past.length === 0) return;
-
-    const previous = past[past.length - 1];
-
-    setFuture((prev) => [slides, ...prev]);
-    setSlides(previous);
-    setPast((prev) => prev.slice(0, -1));
-    setSelectedId(null);
-  };
-
-  const redo = () => {
-    if (future.length === 0) return;
-
-    const next = future[0];
-
-    setPast((prev) => [...prev, slides]);
-    setSlides(next);
-    setFuture((prev) => prev.slice(1));
-    setSelectedId(null);
-  };
-
-  const addSlide = () => {
-    saveHistory();
-
-    setSlides((prev) => [...prev, { elements: [], notes: "" }]);
-    setCurrentSlide(slides.length);
-    setSelectedId(null);
-  };
-
-  const deleteSlide = (index) => {
-    if (slides.length === 1) return;
-
-    saveHistory();
-
-    const updated = slides.filter((_, i) => i !== index);
-
-    setSlides(updated);
-    setCurrentSlide(index === 0 ? 0 : index - 1);
-    setSelectedId(null);
-  };
-
-  const moveSlideUp = (index) => {
-    if (index === 0) return;
-
-    saveHistory();
-
-    const updated = [...slides];
-
-    [updated[index], updated[index - 1]] = [
-      updated[index - 1],
-      updated[index],
-    ];
-
-    setSlides(updated);
-    setCurrentSlide(index - 1);
-    setSelectedId(null);
-  };
-
-  const moveSlideDown = (index) => {
-    if (index === slides.length - 1) return;
-
-    saveHistory();
-
-    const updated = [...slides];
-
-    [updated[index], updated[index + 1]] = [
-      updated[index + 1],
-      updated[index],
-    ];
-
-    setSlides(updated);
-    setCurrentSlide(index + 1);
-    setSelectedId(null);
-  };
-
-  const reorderSlides = (fromIndex, toIndex) => {
-    if (fromIndex === toIndex) return;
-
-    saveHistory();
-
-    const updated = [...slides];
-    const [movedSlide] = updated.splice(fromIndex, 1);
-
-    updated.splice(toIndex, 0, movedSlide);
-
-    setSlides(updated);
-    setCurrentSlide(toIndex);
-    setSelectedId(null);
-  };
-
-  const addTextBox = () => {
-    saveHistory();
-
-    const id = Date.now();
-
-    setSlides((prev) => {
-      const updated = [...prev];
-
-      updated[currentSlide] = {
-        ...updated[currentSlide],
-        elements: [
-          ...updated[currentSlide].elements,
-          {
-            id,
-            type: "text",
-            x: 120,
-            y: 120,
-            content: "Text box",
-            size: 28,
-            color: "#1F6F5F",
-            bold: false,
-          },
-        ],
-      };
-
-      return updated;
-    });
-
-    setSelectedId(id);
-  };
-
-  const addImageFromUrl = () => {
-    const url = prompt("Paste a direct image URL");
-
-    if (!url) return;
-
-    saveHistory();
-
-    const id = Date.now();
-
-    setSlides((prev) => {
-      const updated = [...prev];
-
-      updated[currentSlide] = {
-        ...updated[currentSlide],
-        elements: [
-          ...updated[currentSlide].elements,
-          {
-            id,
-            type: "image",
-            x: 120,
-            y: 120,
-            url,
-            scaleX: 0.5,
-            scaleY: 0.5,
-          },
-        ],
-      };
-
-      return updated;
-    });
-
-    setSelectedId(id);
-  };
-
-  const uploadImage = (file) => {
-    if (!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      saveHistory();
-
-      const id = Date.now();
-
-      setSlides((prev) => {
-        const updated = [...prev];
-
-        updated[currentSlide] = {
-          ...updated[currentSlide],
-          elements: [
-            ...updated[currentSlide].elements,
-            {
-              id,
-              type: "image",
-              x: 120,
-              y: 120,
-              url: reader.result,
-              scaleX: 0.5,
-              scaleY: 0.5,
-            },
-          ],
-        };
-
-        return updated;
-      });
-
-      setSelectedId(id);
-    };
-
-    reader.readAsDataURL(file);
-  };
-
-  const addShape = (shapeType) => {
-    saveHistory();
-
-    const id = Date.now();
-
-    setSlides((prev) => {
-      const updated = [...prev];
-
-      updated[currentSlide] = {
-        ...updated[currentSlide],
-        elements: [
-          ...updated[currentSlide].elements,
-          {
-            id,
-            type: "shape",
-            shape: shapeType,
-            x: 140,
-            y: 140,
-            width: 140,
-            height: 90,
-            fill: shapeType === "line" ? "transparent" : "#6FCF97",
-            stroke: "#2FA084",
-            scaleX: 1,
-            scaleY: 1,
-          },
-        ],
-      };
-
-      return updated;
-    });
-
-    setSelectedId(id);
-  };
-
-  const updateSelectedElement = (changes) => {
-    if (!selectedId) return;
-
-    saveHistory();
-
-    setSlides((prev) => {
-      const updated = [...prev];
-
-      updated[currentSlide] = {
-        ...updated[currentSlide],
-        elements: updated[currentSlide].elements.map((item) =>
-          item.id === selectedId ? { ...item, ...changes } : item
-        ),
-      };
-
-      return updated;
-    });
-  };
-
-  const updateElementFromCanvas = (id, changes) => {
-    setSlides((prev) => {
-      const updated = [...prev];
-
-      updated[currentSlide] = {
-        ...updated[currentSlide],
-        elements: updated[currentSlide].elements.map((item) =>
-          item.id === id ? { ...item, ...changes } : item
-        ),
-      };
-
-      return updated;
-    });
-  };
-
-  const deleteSelectedElement = () => {
-    if (!selectedId) return;
-
-    saveHistory();
-
-    setSlides((prev) => {
-      const updated = [...prev];
-
-      updated[currentSlide] = {
-        ...updated[currentSlide],
-        elements: updated[currentSlide].elements.filter(
-          (item) => item.id !== selectedId
-        ),
-      };
-
-      return updated;
-    });
-
-    setSelectedId(null);
-  };
-
-  const updateSlideNotes = (value) => {
-    setSlides((prev) => {
-      const updated = [...prev];
-
-      updated[currentSlide] = {
-        ...updated[currentSlide],
-        notes: value,
-      };
-
-      return updated;
-    });
-  };
-
-  const openPresenterMode = () => {
-    setPresenterIndex(currentSlide);
-    setPresenterOpen(true);
-  };
-
-  const zoomIn = () => {
-    setZoom((prev) => Math.min(prev + 10, 150));
-  };
-
-  const zoomOut = () => {
-    setZoom((prev) => Math.max(prev - 10, 50));
-  };
-
   const selectedElement =
     slides[currentSlide]?.elements.find((item) => item.id === selectedId) ||
     null;
@@ -444,8 +334,8 @@ function App() {
         canUndo={past.length > 0}
         canRedo={future.length > 0}
         zoom={zoom}
-        zoomIn={zoomIn}
-        zoomOut={zoomOut}
+        zoomIn={() => setZoom((prev) => Math.min(prev + 10, 150))}
+        zoomOut={() => setZoom((prev) => Math.max(prev - 10, 50))}
         onSave={handleSave}
         openPresenterMode={openPresenterMode}
         exportPresentation={exportPresentation}
@@ -461,6 +351,7 @@ function App() {
           deleteSlide={deleteSlide}
           moveSlideUp={moveSlideUp}
           moveSlideDown={moveSlideDown}
+          reorderSlides={reorderSlides}
           setSelectedId={setSelectedId}
         />
 
@@ -472,16 +363,7 @@ function App() {
             setSelectedId={setSelectedId}
             updateElementFromCanvas={updateElementFromCanvas}
             deleteSelectedElement={deleteSelectedElement}
-            addElementFromCanvas={(element) => {
-              setSlides((prev) => {
-                const updated = [...prev];
-                updated[currentSlide] = {
-                  ...updated[currentSlide],
-                  elements: [...updated[currentSlide].elements, element],
-                };
-                return updated;
-              });
-            }}
+            addElementFromCanvas={addElement}
             undo={undo}
             openPresenterMode={openPresenterMode}
           />
@@ -501,7 +383,6 @@ function App() {
         <div className="presenter-overlay">
           <div className="presenter-top">
             <strong>Presenter mode</strong>
-
             <button onClick={() => setPresenterOpen(false)}>Close</button>
           </div>
 
@@ -582,10 +463,6 @@ function App() {
                           element.shape === "triangle"
                             ? "polygon(50% 0, 0 100%, 100% 100%)"
                             : "none",
-                        transform: `scale(${element.scaleX || 1}, ${
-                          element.scaleY || 1
-                        })`,
-                        transformOrigin: "top left",
                       }}
                     />
                   );
@@ -595,7 +472,6 @@ function App() {
 
             <div className="presenter-notes">
               <span>Notes</span>
-
               <div className="presenter-notes-text">
                 {presenterSlide.notes || "No speaker notes for this slide."}
               </div>

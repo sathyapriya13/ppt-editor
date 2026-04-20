@@ -16,10 +16,33 @@ function Canvas({
   const fabricRef = useRef(null);
   const copiedObjectRef = useRef(null);
 
+  const setSelectedIdRef = useRef(setSelectedId);
+  const updateElementFromCanvasRef = useRef(updateElementFromCanvas);
+  const deleteSelectedElementRef = useRef(deleteSelectedElement);
+  const addElementFromCanvasRef = useRef(addElementFromCanvas);
+  const undoRef = useRef(undo);
+  const openPresenterModeRef = useRef(openPresenterMode);
+
+  useEffect(() => {
+    setSelectedIdRef.current = setSelectedId;
+    updateElementFromCanvasRef.current = updateElementFromCanvas;
+    deleteSelectedElementRef.current = deleteSelectedElement;
+    addElementFromCanvasRef.current = addElementFromCanvas;
+    undoRef.current = undo;
+    openPresenterModeRef.current = openPresenterMode;
+  }, [
+    setSelectedId,
+    updateElementFromCanvas,
+    deleteSelectedElement,
+    addElementFromCanvas,
+    undo,
+    openPresenterMode,
+  ]);
+
   const saveObjectPosition = (obj) => {
     if (!obj || !obj.customId) return;
 
-    updateElementFromCanvas(obj.customId, {
+    updateElementFromCanvasRef.current(obj.customId, {
       x: obj.left || 0,
       y: obj.top || 0,
       scaleX: obj.scaleX || 1,
@@ -118,6 +141,7 @@ function Canvas({
 
   useEffect(() => {
     if (!canvasRef.current) return;
+    if (fabricRef.current) return;
 
     const canvas = new fabric.Canvas(canvasRef.current, {
       width: 960,
@@ -130,18 +154,18 @@ function Canvas({
 
     canvas.on("selection:created", (e) => {
       if (e.selected && e.selected[0]) {
-        setSelectedId(e.selected[0].customId);
+        setSelectedIdRef.current(e.selected[0].customId);
       }
     });
 
     canvas.on("selection:updated", (e) => {
       if (e.selected && e.selected[0]) {
-        setSelectedId(e.selected[0].customId);
+        setSelectedIdRef.current(e.selected[0].customId);
       }
     });
 
     canvas.on("selection:cleared", () => {
-      setSelectedId(null);
+      setSelectedIdRef.current(null);
     });
 
     canvas.on("object:modified", (e) => {
@@ -153,15 +177,18 @@ function Canvas({
 
       if (!obj || !obj.customId) return;
 
-      updateElementFromCanvas(obj.customId, {
+      updateElementFromCanvasRef.current(obj.customId, {
         content: obj.text || "",
       });
     });
 
     return () => {
-      canvas.dispose();
+      if (fabricRef.current) {
+        fabricRef.current.dispose();
+        fabricRef.current = null;
+      }
     };
-  }, [setSelectedId, updateElementFromCanvas]);
+  }, []);
 
   useEffect(() => {
     const canvas = fabricRef.current;
@@ -214,7 +241,6 @@ function Canvas({
             });
 
             img.customId = el.id;
-
             canvas.add(img);
             canvas.renderAll();
           },
@@ -298,13 +324,8 @@ function Canvas({
 
         e.preventDefault();
 
-        if (deleteSelectedElement && activeObject.customId) {
-          deleteSelectedElement();
-        } else {
-          canvas.remove(activeObject);
-          canvas.discardActiveObject();
-          canvas.renderAll();
-          setSelectedId(null);
+        if (deleteSelectedElementRef.current) {
+          deleteSelectedElementRef.current();
         }
 
         return;
@@ -335,36 +356,36 @@ function Canvas({
           });
 
           const newElement = objectToSlideElement(clonedObject);
-          clonedObject.customId = newElement.id;
-
-          if (addElementFromCanvas) {
-            addElementFromCanvas(newElement);
-          } else {
-            canvas.add(clonedObject);
-            canvas.setActiveObject(clonedObject);
-            canvas.renderAll();
-          }
 
           copiedObjectRef.current = clonedObject;
-          setSelectedId(newElement.id);
+
+          if (addElementFromCanvasRef.current) {
+            addElementFromCanvasRef.current(newElement);
+          }
+
+          setSelectedIdRef.current(newElement.id);
         });
 
         return;
       }
 
       if (e.ctrlKey && e.key.toLowerCase() === "z") {
-        if (!undo) return;
-
         e.preventDefault();
-        undo();
+
+        if (undoRef.current) {
+          undoRef.current();
+        }
+
         return;
       }
 
       if (e.ctrlKey && e.key.toLowerCase() === "p") {
-        if (!openPresenterMode) return;
-
         e.preventDefault();
-        openPresenterMode();
+
+        if (openPresenterModeRef.current) {
+          openPresenterModeRef.current();
+        }
+
         return;
       }
 
@@ -378,22 +399,22 @@ function Canvas({
 
         e.preventDefault();
 
-        const moveAmount = e.shiftKey ? 10 : 2;
+        const amount = e.shiftKey ? 10 : 2;
 
         if (e.key === "ArrowUp") {
-          activeObject.top = (activeObject.top || 0) - moveAmount;
+          activeObject.top = (activeObject.top || 0) - amount;
         }
 
         if (e.key === "ArrowDown") {
-          activeObject.top = (activeObject.top || 0) + moveAmount;
+          activeObject.top = (activeObject.top || 0) + amount;
         }
 
         if (e.key === "ArrowLeft") {
-          activeObject.left = (activeObject.left || 0) - moveAmount;
+          activeObject.left = (activeObject.left || 0) - amount;
         }
 
         if (e.key === "ArrowRight") {
-          activeObject.left = (activeObject.left || 0) + moveAmount;
+          activeObject.left = (activeObject.left || 0) + amount;
         }
 
         activeObject.setCoords();
@@ -407,14 +428,7 @@ function Canvas({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [
-    deleteSelectedElement,
-    addElementFromCanvas,
-    undo,
-    openPresenterMode,
-    setSelectedId,
-    updateElementFromCanvas,
-  ]);
+  }, []);
 
   return (
     <div className="canvas-container">

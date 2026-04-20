@@ -36,13 +36,10 @@ function Sidebar({
               setDraggingIndex(index);
               e.dataTransfer.setData("slideIndex", index);
             }}
-            onDragOver={(e) => {
-              e.preventDefault();
-            }}
+            onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault();
-
-              const fromIndex = parseInt(e.dataTransfer.getData("slideIndex"));
+              const fromIndex = parseInt(e.dataTransfer.getData("slideIndex"), 10);
 
               if (!Number.isNaN(fromIndex)) {
                 reorderSlides(fromIndex, index);
@@ -50,12 +47,9 @@ function Sidebar({
 
               setDraggingIndex(null);
             }}
-            onDragEnd={() => {
-              setDraggingIndex(null);
-            }}
+            onDragEnd={() => setDraggingIndex(null)}
           >
             <div className="slide-number">{index + 1}</div>
-
             <div className="slide-preview">{index + 1}</div>
 
             <div className="slide-footer">
