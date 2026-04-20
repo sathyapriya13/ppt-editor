@@ -461,7 +461,6 @@ function App() {
           deleteSlide={deleteSlide}
           moveSlideUp={moveSlideUp}
           moveSlideDown={moveSlideDown}
-          reorderSlides={reorderSlides}
           setSelectedId={setSelectedId}
         />
 
@@ -472,6 +471,19 @@ function App() {
             zoom={zoom}
             setSelectedId={setSelectedId}
             updateElementFromCanvas={updateElementFromCanvas}
+            deleteSelectedElement={deleteSelectedElement}
+            addElementFromCanvas={(element) => {
+              setSlides((prev) => {
+                const updated = [...prev];
+                updated[currentSlide] = {
+                  ...updated[currentSlide],
+                  elements: [...updated[currentSlide].elements, element],
+                };
+                return updated;
+              });
+            }}
+            undo={undo}
+            openPresenterMode={openPresenterMode}
           />
 
           <div className="notes-panel">
