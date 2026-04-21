@@ -195,6 +195,9 @@ function Canvas({
 
     if (!canvas) return;
 
+    // Don't rebuild the canvas while the user is actively editing text
+    if (canvas.getActiveObject()?.isEditing) return;
+
     canvas.clear();
     canvas.setBackgroundColor("#ffffff", canvas.renderAll.bind(canvas));
 
@@ -311,16 +314,11 @@ function Canvas({
       if (!canvas) return;
 
       const activeObject = canvas.getActiveObject();
-      const activeTag = document.activeElement?.tagName?.toLowerCase();
-      const isTyping =
-        activeTag === "input" ||
-        activeTag === "textarea" ||
-        activeObject?.isEditing;
-
-      if (isTyping) return;
 
       if (e.key === "Delete" || e.key === "Backspace") {
         if (!activeObject) return;
+        // Don't intercept if a textbox is currently in edit mode
+        if (activeObject.isEditing) return;
 
         e.preventDefault();
 
@@ -330,6 +328,13 @@ function Canvas({
 
         return;
       }
+
+      const activeTag = document.activeElement?.tagName?.toLowerCase();
+      const isTyping =
+        activeTag === "input" ||
+        activeTag === "textarea";
+
+      if (isTyping) return;
 
       if (e.ctrlKey && e.key.toLowerCase() === "c") {
         if (!activeObject) return;
@@ -349,13 +354,19 @@ function Canvas({
         e.preventDefault();
 
         copiedObjectRef.current.clone((clonedObject) => {
+          const offsetLeft = (clonedObject.left || 120) + 24;
+          const offsetTop = (clonedObject.top || 120) + 24;
+
           clonedObject.set({
-            left: (clonedObject.left || 120) + 24,
-            top: (clonedObject.top || 120) + 24,
+            left: offsetLeft,
+            top: offsetTop,
             evented: true,
           });
 
           const newElement = objectToSlideElement(clonedObject);
+          // Ensure the offset position is saved into the element data
+          newElement.x = offsetLeft;
+          newElement.y = offsetTop;
 
           copiedObjectRef.current = clonedObject;
 

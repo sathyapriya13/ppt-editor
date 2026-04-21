@@ -21,9 +21,9 @@ function Sidebar({
       </div>
 
       <div className="slide-list">
-        {slides.map((_, index) => (
+        {slides.map((slide, index) => (
           <div
-            key={index}
+            key={slide.id}
             draggable
             className={`slide-item ${index === currentSlide ? "active" : ""} ${
               draggingIndex === index ? "dragging" : ""

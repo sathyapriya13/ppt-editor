@@ -7,9 +7,10 @@ import Canvas from "./components/Canvas";
 function App() {
   const defaultSlides = [
     {
+      id: crypto.randomUUID(),
       elements: [
         {
-          id: Date.now(),
+          id: crypto.randomUUID(),
           type: "text",
           x: 275,
           y: 120,
@@ -19,7 +20,7 @@ function App() {
           bold: true,
         },
         {
-          id: Date.now() + 1,
+          id: crypto.randomUUID(),
           type: "text",
           x: 355,
           y: 210,
@@ -87,8 +88,10 @@ function App() {
 
   const addSlide = () => {
     saveHistory();
-    setSlides((prev) => [...prev, { elements: [], notes: "" }]);
-    setCurrentSlide(slides.length);
+    setSlides((prev) => {
+      setCurrentSlide(prev.length);
+      return [...prev, { id: crypto.randomUUID(), elements: [], notes: "" }];
+    });
     setSelectedId(null);
   };
 
@@ -99,7 +102,11 @@ function App() {
     const updated = slides.filter((_, i) => i !== index);
 
     setSlides(updated);
-    setCurrentSlide(index === 0 ? 0 : index - 1);
+    setCurrentSlide((prev) => {
+      if (index < prev) return prev - 1;
+      if (index === prev) return Math.max(0, prev - 1);
+      return prev;
+    });
     setSelectedId(null);
   };
 
@@ -130,7 +137,7 @@ function App() {
   const addElement = (element) => {
     saveHistory();
 
-    const id = element.id || Date.now();
+    const id = element.id || crypto.randomUUID();
 
     setSlides((prev) => {
       const updated = [...prev];
@@ -296,6 +303,7 @@ function App() {
 
         setSlides(
           importedSlides.map((slide) => ({
+            id: slide.id || crypto.randomUUID(),
             elements: Array.isArray(slide.elements) ? slide.elements : [],
             notes: slide.notes || "",
           }))
